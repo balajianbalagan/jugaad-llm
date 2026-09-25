@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local LLM Tester</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <p class="product-name">Local LLM Tester</p>
+          <h1>Talk to your local model.</h1>
+          <p class="lede">A minimal LangChain test bench for OpenAI-compatible servers.</p>
+        </div>
+        <span id="endpoint" class="endpoint" aria-label="Configured endpoint"></span>
+      </header>
+
+      <section class="workspace" aria-label="Local model test form">
+        <div class="settings">
+          <label>Model <input id="model" placeholder="e.g. qwen2.5-7b-instruct" /></label>
+          <label>Temperature <output id="temperature-value">0.7</output>
+            <input id="temperature" type="range" min="0" max="2" value="0.7" step="0.1" />
+          </label>
+          <label>System instruction
+            <textarea id="system-prompt" rows="3" placeholder="Optional: You are a concise, helpful assistant."></textarea>
+          </label>
+        </div>
+
+        <form id="chat-form">
+          <label for="prompt">Prompt</label>
+          <textarea id="prompt" rows="7" required autofocus placeholder="Ask your model anything…"></textarea>
+          <div class="form-footer">
+            <span id="status" role="status">Ready</span>
+            <button id="send" type="submit">Send prompt</button>
+          </div>
+        </form>
+
+        <section class="response" aria-live="polite">
+          <div class="response-heading"><h2>Response</h2><button id="copy" type="button" disabled>Copy</button></div>
+          <pre id="reply">Your model’s response will appear here.</pre>
+        </section>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

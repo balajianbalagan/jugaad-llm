@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Jugaad LLM is a tiny LangChain test bench for a local OpenAI-compatible gateway." />
+    <title>Jugaad LLM — local models, zero ceremony</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Primary navigation">
+        <a class="wordmark" href="#top" aria-label="Jugaad LLM home">Jugaad <span>LLM</span></a>
+        <a class="site-link" href="https://balajianbalagan.pages.dev" target="_blank" rel="noreferrer">balajianbalagan.pages.dev <span aria-hidden="true">↗</span></a>
+      </nav>
+      <section id="top" class="hero" aria-labelledby="page-title">
+        <p class="label">Local model playground</p>
+        <h1 id="page-title">Bring your own gateway.<br /><em>Keep the flow.</em></h1>
+        <p class="intro">Jugaad LLM is a focused LangChain test bench for OpenAI-compatible local gateways — a clean place to check routes, models, prompts, and responses before they reach your product.</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/balajianbalagan/jugaad-llm" target="_blank" rel="noreferrer">View the repository <span aria-hidden="true">↗</span></a>
+          <a class="button secondary" href="https://balajianbalagan.pages.dev" target="_blank" rel="noreferrer">About the maker</a>
+        </div>
+      </section>
+      <section class="signal" aria-label="What Jugaad LLM does">
+        <article><span>01</span><h2>Point it</h2><p>Set an OpenAI-compatible base URL and model in a private local environment file.</p></article>
+        <article><span>02</span><h2>Prompt it</h2><p>Use the lightweight FastAPI interface to try prompts, system instructions, and temperature settings.</p></article>
+        <article><span>03</span><h2>Ship with confidence</h2><p>Keep the key server-side, validate the response path, then move the proven configuration into your app.</p></article>
+      </section>
+      <section class="terminal" aria-label="Quick start">
+        <div class="terminal-title"><span></span><span></span><span></span><p>quick-start</p></div>
+        <pre><code>git clone https://github.com/balajianbalagan/jugaad-llm.git
+cd jugaad-llm
+py -m venv .venv
+pip install -r requirements.txt
+uvicorn app:app --reload</code></pre>
+        <p>Then open <strong>http://127.0.0.1:8000</strong> and start testing.</p>
+      </section>
+    </main>
+    <footer><p>Built by <a href="https://balajianbalagan.pages.dev" target="_blank" rel="noreferrer">Balaji Anbalagan</a>.</p><p>Python · FastAPI · LangChain</p></footer>
+  </body>
+</html>
