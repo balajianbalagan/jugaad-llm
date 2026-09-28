@@ -93,6 +93,7 @@ class K2ThinkProvider(BaseBrowserProvider):
                     await page.goto(self.home_url, wait_until="domcontentloaded", timeout=25000)
                     await asyncio.sleep(0.15)
 
+                await self.wait_for_cloudflare_challenge(page, timeout=12.0)
                 await self.dismiss_banners(page)
 
                 candidates = [
@@ -109,7 +110,7 @@ class K2ThinkProvider(BaseBrowserProvider):
 
                 await self.enter_text_safely(page, input_el, prompt)
 
-                assistant_selector = 'div.prose, div[class*="message"], div[class*="markdown"], div[class*="bubble"], div[class*="response"]'
+                assistant_selector = '[data-message-author-role="assistant"], div[class*="assistant"], div.prose, div[class*="markdown"], div[class*="response"], div[class*="bubble"]:not([class*="user"]), div[class*="bot"]'
                 existing_bubbles = await page.query_selector_all(assistant_selector)
                 initial_count = len(existing_bubbles)
                 logger.info(f"[{self.display_name}] Existing assistant responses: {initial_count}")
@@ -137,28 +138,34 @@ class K2ThinkProvider(BaseBrowserProvider):
                         latest_bubble = bubbles[-1]
                         current_text = await latest_bubble.inner_text()
 
+                        # Skip empty or whitespace-only placeholder before model produces text
+                        if not current_text.strip():
+                            continue
+
                         if len(current_text) > last_len:
                             chunk = current_text[last_len:]
                             last_len = len(current_text)
                             last_change_time = time.time()
-                            if not started_generating and current_text.strip():
+                            if not started_generating:
                                 started_generating = True
                             yield chunk
                         elif started_generating and last_len > 0:
-                            if time.time() - last_change_time >= 1.8:
+                            if time.time() - last_change_time >= 2.5:
                                 break
                     elif not started_generating and bubbles and not existing_bubbles:
                         latest_bubble = bubbles[-1]
                         current_text = await latest_bubble.inner_text()
+                        if not current_text.strip():
+                            continue
                         if len(current_text) > last_len:
                             chunk = current_text[last_len:]
                             last_len = len(current_text)
                             last_change_time = time.time()
-                            if not started_generating and current_text.strip():
+                            if not started_generating:
                                 started_generating = True
                             yield chunk
                         elif started_generating and last_len > 0:
-                            if time.time() - last_change_time >= 1.8:
+                            if time.time() - last_change_time >= 2.5:
                                 break
 
                 if not started_generating or last_len == 0:

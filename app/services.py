@@ -10,6 +10,7 @@ from app.browser.manager import BrowserManager
 from app.browser.providers.base import (
     AuthenticationRequiredError,
     ProviderRateLimitError,
+    ProviderTimeoutError,
     format_messages,
 )
 
@@ -130,6 +131,11 @@ class GatewayService:
             chunks.append(chunk)
 
         full_content = "".join(chunks)
+        if not full_content.strip():
+            raise ProviderTimeoutError(
+                f"[{model}] Provider session returned empty or whitespace-only response. "
+                f"Please verify session login via 'python start.py --login' or test with another model."
+            )
         prompt_text = format_messages(messages)
         prompt_tokens = max(1, len(prompt_text.split()))
         completion_tokens = max(1, len(full_content.split()))

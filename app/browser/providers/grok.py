@@ -129,11 +129,14 @@ class GrokProvider(BaseBrowserProvider):
                         latest_bubble = bubbles[-1]
                         current_text = await latest_bubble.inner_text()
 
+                        if not current_text.strip():
+                            continue
+
                         if len(current_text) > last_len:
                             chunk = current_text[last_len:]
                             last_len = len(current_text)
                             last_change_time = time.time()
-                            if not started_generating and current_text.strip():
+                            if not started_generating:
                                 started_generating = True
                             yield chunk
                         elif started_generating and last_len > 0:
@@ -143,11 +146,13 @@ class GrokProvider(BaseBrowserProvider):
                         # First bubble in empty chat
                         latest_bubble = bubbles[-1]
                         current_text = await latest_bubble.inner_text()
+                        if not current_text.strip():
+                            continue
                         if len(current_text) > last_len:
                             chunk = current_text[last_len:]
                             last_len = len(current_text)
                             last_change_time = time.time()
-                            if not started_generating and current_text.strip():
+                            if not started_generating:
                                 started_generating = True
                             yield chunk
                         elif started_generating and last_len > 0:
