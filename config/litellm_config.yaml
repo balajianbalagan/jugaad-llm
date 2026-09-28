@@ -1,0 +1,20 @@
+model_list:
+  - model_name: gpt-4o-mini
+    litellm_params: {model: openai/gpt-4o-mini, api_key: os.environ/OPENAI_API_KEY, rpm: 500, timeout: 30}
+  - model_name: claude-haiku
+    litellm_params: {model: anthropic/claude-3-5-haiku-latest, api_key: os.environ/ANTHROPIC_API_KEY, rpm: 300, timeout: 30}
+  - model_name: grok
+    litellm_params: {model: xai/grok-3-mini, api_key: os.environ/XAI_API_KEY, rpm: 100, timeout: 30}
+  - model_name: deepseek-chat
+    litellm_params: {model: deepseek/deepseek-chat, api_key: os.environ/DEEPSEEK_API_KEY, rpm: 300, timeout: 30}
+  - model_name: llama-3.3-70b
+    litellm_params: {model: groq/llama-3.3-70b-versatile, api_key: os.environ/GROQ_API_KEY, rpm: 30, timeout: 30}
+  - model_name: gemini-flash
+    litellm_params: {model: gemini/gemini-2.5-flash, api_key: os.environ/GEMINI_API_KEY, rpm: 15, timeout: 30}
+router_settings:
+  routing_strategy: least-busy
+  num_retries: 2
+  timeout: 60
+  fallbacks:
+    - {gpt-4o-mini: [gemini-flash, llama-3.3-70b]}
+    - {claude-haiku: [gpt-4o-mini, gemini-flash]}

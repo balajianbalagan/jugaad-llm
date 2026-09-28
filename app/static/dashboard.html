@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>llm-jugaad | Control Dashboard 🧙‍♂️</title>
+  <link rel="icon" type="image/jpeg" href="/static/llm-jugaad-badge.jpg">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --ink: #f0f6fc;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --amber: #d29922;
+      --red: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      background: var(--accent);
+      color: #0d1117;
+      border: 0;
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.9; }
+    button.secondary {
+      background: #21262d;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+    button.secondary:hover { background: #30363d; }
+    button.login-btn {
+      background: #238636;
+      color: #fff;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo span { color: var(--accent); }
+    .badge {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 12px;
+      background: #1f6feb26;
+      color: var(--accent);
+      border: 1px solid #388bfd4d;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .banner-card {
+      background: linear-gradient(135deg, #161b22 0%, #1a2332 100%);
+      border: 1px solid #388bfd4d;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .tunnel-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      color: var(--green);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .panel h2 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 600;
+    }
+    .provider-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .provider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .provider-info b { display: block; font-size: 14px; }
+    .provider-info small { color: var(--muted); font-size: 12px; }
+    .status-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-tag.ready, .status-tag.healthy {
+      background: #23863626;
+      color: var(--green);
+      border: 1px solid #23863666;
+    }
+    .status-tag.needs_login, .status-tag.auth_failed, .status-tag.missing_key {
+      background: #d2992226;
+      color: var(--amber);
+      border: 1px solid #d2992266;
+    }
+    .status-tag.rate_limited, .status-tag.unhealthy {
+      background: #f8514926;
+      color: var(--red);
+      border: 1px solid #f8514966;
+    }
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .btn-login {
+      background: #238636;
+      color: #fff;
+    }
+    .btn-login:hover { background: #2ea043; }
+    .btn-save {
+      background: #1f6feb;
+      color: #fff;
+    }
+    .btn-save:hover { background: #388bfd; }
+    .btn-refresh {
+      background: #21262d;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+    .btn-refresh:hover { background: #30363d; }
+    .provider-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .login-banner {
+      background: linear-gradient(90deg, #1f6feb2a, #2386362a);
+      border: 1px solid #388bfd66;
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .login-banner b { color: #58a6ff; }
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .metric-card {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+    .metric-card b {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .metric-card span { font-size: 12px; color: var(--muted); }
+    form label {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--ink);
+      padding: 8px 10px;
+      margin-top: 4px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .console-output {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      min-height: 140px;
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #c9d1d9;
+    }
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <main id="loginScreen" class="login-container">
+    <div class="panel">
+      <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+        <img src="/static/llm-jugaad-badge.jpg" style="width: 32px; height: 32px; border-radius: 8px;">
+        llm-<span>jugaad</span> 🧙‍♂️
+      </div>
+      <h2 style="margin-top: 16px;">Operator Login</h2>
+      <p style="color: var(--muted);">Sign in with DASHBOARD_PASSWORD or gateway master key.</p>
+      <form id="loginForm" style="margin-top: 16px;">
+        <label>Password
+          <input type="password" id="loginPassword" required autofocus>
+        </label>
+        <button type="submit" style="width: 100%; margin-top: 8px;">Sign In</button>
+        <p id="loginError" style="color: var(--red); margin-top: 8px; font-size: 13px;"></p>
+      </form>
+    </div>
+  </main>
+
+  <!-- DASHBOARD APP -->
+  <main id="appScreen" class="hidden">
+    <div class="top-bar">
+      <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+        <img src="/static/llm-jugaad-badge.jpg" style="width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,240,255,0.4);">
+        llm-<span>jugaad</span>
+        <span class="badge">v0.2.0</span>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <a href="/" class="secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 6px; text-decoration: none; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--ink);">🏠 Landing Page</a>
+        <button class="secondary" id="validateSessionsBtn">🔍 Validate All</button>
+        <button class="secondary" id="saveAllSessionsBtn">💾 Save & Reload All</button>
+        <button class="login-btn" id="launchLoginBtn">🔐 Open Login Browser (All)</button>
+        <button class="secondary" id="logoutBtn">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- ACTIVE LOGIN NOTIFICATION BANNER -->
+    <div id="loginBanner" class="login-banner hidden">
+      <div>
+        <b id="loginBannerTitle">🌐 Chrome Opened for Sign-in</b>
+        <div id="loginBannerDesc" style="color: var(--muted); font-size: 13px; margin-top: 2px;">
+          Log into your account in the Chrome window. When finished, click Save Session.
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="btn-sm btn-save" id="bannerSaveBtn" style="padding: 6px 14px; font-size: 13px;">💾 Finish & Save Session</button>
+        <button class="btn-sm secondary" id="bannerDismissBtn" style="padding: 6px 12px; font-size: 13px;">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- HACKATHON TUNNEL / QUICKSTART BANNER -->
+    <div class="banner-card">
+      <div>
+        <h3 style="margin: 0 0 6px 0; font-size: 16px;">⚡ Hackathon Ready</h3>
+        <p style="margin: 0; color: var(--muted); font-size: 13px;">
+          Plug this URL into any LangChain, LlamaIndex, OpenAI SDK, Cursor, or Next.js app!
+        </p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <div id="tunnelDisplay" class="tunnel-box">http://localhost:4000/v1</div>
+        <div id="apiKeyDisplay" class="tunnel-box" style="color: var(--accent);" title="Gateway Master API Key">sk-hackathon-token</div>
+        <button class="secondary" id="copyEnvBtn">Copy .env</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- PROVIDERS & SESSIONS -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Free-Tier Web Accounts</h2>
+          <button class="secondary" id="refreshBtn" style="padding: 4px 10px; font-size: 12px;">Refresh</button>
+        </div>
+        <div id="providerList" class="provider-list">
+          <!-- Populated by JS -->
+        </div>
+
+        <div style="margin-top: 24px;">
+          <h2 style="font-size: 15px; margin-bottom: 8px;">Traffic & Telemetry</h2>
+          <div class="metrics-row" id="metricsRow">
+            <div class="metric-card"><b id="statRequests">0</b><span>Requests</span></div>
+            <div class="metric-card"><b id="statTokens">0</b><span>Tokens</span></div>
+            <div class="metric-card"><b id="statErrors">0</b><span>Errors</span></div>
+            <div class="metric-card"><b id="statLatency">0ms</b><span>Avg Latency</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE TEST CONSOLE -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Test Prompt Console</h2>
+          <span style="color: var(--muted); font-size: 12px;">Direct Browser Execution</span>
+        </div>
+        <form id="testForm">
+          <label>Model
+            <select id="testModel">
+              <option value="auto">auto (Load-balanced active account)</option>
+              <option value="chatgpt">chatgpt (ChatGPT Free Web)</option>
+              <option value="claude">claude (Claude.ai Free Web)</option>
+              <option value="deepseek">deepseek (DeepSeek Chat)</option>
+              <option value="grok">grok (Grok Free Web)</option>
+              <option value="gemini">gemini (Google Gemini Web)</option>
+              <option value="perplexity">perplexity (Perplexity AI)</option>
+              <option value="mistral">mistral (Mistral Le Chat)</option>
+              <option value="huggingface">huggingface (HuggingFace Chat)</option>
+              <option value="poe">poe (Poe AI Chat)</option>
+              <option value="k2think">k2think (K2 Think Reasoning)</option>
+              <option value="ollama">ollama (Ollama Cloud / Local)</option>
+            </select>
+          </label>
+          <label>Gateway API Key
+            <input type="text" id="testApiKey" placeholder="sk-hackathon-token" value="sk-hackathon-token">
+          </label>
+          <label>Prompt
+            <textarea id="testPrompt" rows="3" required>Hello! Give me a quick one-sentence introduction of who you are.</textarea>
+          </label>
+          <button type="submit" id="sendBtn">Send Request</button>
+        </form>
+
+        <h3 style="font-size: 14px; margin: 18px 0 8px 0;">Response</h3>
+        <div id="testOutput" class="console-output">Waiting for your query…</div>
+      </div>
+    </div>
+
+    <!-- LIVE GATEWAY LOGS CONSOLE -->
+    <div class="panel" style="margin-top: 16px;">
+      <div class="panel-header">
+        <h2>Live Gateway Logs</h2>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <label style="margin: 0; font-size: 12px; display: flex; align-items: center; gap: 4px; color: var(--muted);">
+            <input type="checkbox" id="autoScrollLogs" checked style="width: auto; margin: 0;"> Auto-scroll
+          </label>
+          <button class="secondary" id="clearLogsBtn" style="padding: 4px 10px; font-size: 12px;">Clear</button>
+        </div>
+      </div>
+      <div id="logsConsole" class="console-output" style="max-height: 220px; font-size: 12px; color: #79c0ff; line-height: 1.45;">
+        Streaming live gateway logs…
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let overviewData = null;
+
+    async function checkAuthAndLoad() {
+      try {
+        const res = await fetch('/admin/overview');
+        if (!res.ok) {
+          $('loginScreen').classList.remove('hidden');
+          $('appScreen').classList.add('hidden');
+          return;
+        }
+        $('loginScreen').classList.add('hidden');
+        $('appScreen').classList.remove('hidden');
+        overviewData = await res.json();
+        renderOverview();
+      } catch (e) {
+        $('loginScreen').classList.remove('hidden');
+        $('appScreen').classList.add('hidden');
+      }
+    }
+
+    function renderOverview() {
+      if (!overviewData) return;
+
+      // Update tunnel box
+      const tunnel = overviewData.tunnel_url;
+      const apiBase = tunnel ? `${tunnel}/v1` : `${window.location.origin}/v1`;
+      $('tunnelDisplay').textContent = apiBase;
+
+      // Render providers
+      const container = $('providerList');
+      container.innerHTML = overviewData.providers.map(p => {
+        const isReady = p.status === 'ready' || p.status === 'healthy';
+        const tagClass = isReady ? 'ready' : (p.status.includes('limit') ? 'rate_limited' : 'needs_login');
+        const label = isReady ? 'Session Active' : (p.status.includes('limit') ? 'Rate Limited' : 'Sign-in Needed');
+        const pName = p.name || p.provider.split(' ')[0].toLowerCase();
+        const isBrowser = p.type === 'browser';
+        return `
+          <div class="provider-row">
+            <div class="provider-info">
+              <b>${p.provider}</b>
+              <small>Models: ${p.models.slice(0, 3).join(', ')}${p.last_error ? ' · ' + p.last_error.slice(0, 60) : ''}</small>
+            </div>
+            <div class="provider-actions">
+              <span class="status-tag ${tagClass}">● ${label}</span>
+              ${isBrowser ? `
+                <button class="btn-sm btn-login" onclick="loginProvider('${pName}')" title="Open Chrome to sign into ${pName}">🔑 Login</button>
+                <button class="btn-sm btn-save" onclick="saveProviderSession('${pName}')" title="Save session and flush browser state for ${pName}">💾 Save</button>
+                <button class="btn-sm btn-refresh" onclick="refreshProviderSession('${pName}')" title="Re-check ${pName} live session">🔄 Refresh</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Update stats
+      const s = overviewData.stats || {};
+      $('statRequests').textContent = (s.requests || 0).toLocaleString();
+      $('statTokens').textContent = (s.tokens || 0).toLocaleString();
+      $('statErrors').textContent = (s.errors || 0).toLocaleString();
+      const avgLat = s.requests ? Math.round((s.total_latency_ms || 0) / s.requests) : 0;
+      $('statLatency').textContent = `${avgLat}ms`;
+
+      // Update API Key displays
+      if (overviewData && overviewData.master_key) {
+        if ($('apiKeyDisplay')) $('apiKeyDisplay').textContent = overviewData.master_key;
+        if ($('testApiKey') && !$('testApiKey').dataset.modified) {
+          $('testApiKey').value = overviewData.master_key;
+        }
+      }
+    }
+
+    if ($('testApiKey')) {
+      $('testApiKey').oninput = () => { $('testApiKey').dataset.modified = 'true'; };
+    }
+
+    // Interactive Provider Login & Save Handlers
+    let activeLoginTarget = null;
+
+    function showLoginBanner(providerName, msg) {
+      activeLoginTarget = providerName;
+      if ($('loginBanner')) {
+        $('loginBanner').classList.remove('hidden');
+        $('loginBannerTitle').textContent = `🌐 Chrome Opened for ${providerName ? providerName.toUpperCase() : 'All Providers'}`;
+        $('loginBannerDesc').textContent = msg || `Log into your account in the Chrome window. When finished, click Save Session.`;
+      }
+    }
+
+    function hideLoginBanner() {
+      activeLoginTarget = null;
+      if ($('loginBanner')) $('loginBanner').classList.add('hidden');
+    }
+
+    if ($('bannerDismissBtn')) $('bannerDismissBtn').onclick = hideLoginBanner;
+    if ($('bannerSaveBtn')) $('bannerSaveBtn').onclick = () => saveProviderSession(activeLoginTarget);
+
+    window.loginProvider = async (providerName) => {
+      try {
+        const res = await fetch('/admin/provider-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: providerName })
+        });
+        const data = await res.json();
+        showLoginBanner(providerName, data.message);
+        fetchLogs();
+      } catch (err) {
+        alert('Failed to launch login: ' + err);
+      }
+    };
+
+    window.saveProviderSession = async (providerName) => {
+      const label = providerName ? providerName.toUpperCase() : 'ALL PROVIDERS';
+      try {
+        const res = await fetch('/admin/save-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: providerName || null })
+        });
+        const data = await res.json();
+        hideLoginBanner();
+        await checkAuthAndLoad();
+        fetchLogs();
+        const isAuth = data.result?.authenticated;
+        const msg = data.result?.message || 'Session saved & reloaded.';
+        alert(`💾 Save & Refresh for ${label}:\nStatus: ${isAuth ? '✅ READY (Session Active)' : '⚠️ ' + msg}`);
+      } catch (err) {
+        alert('Failed to save session: ' + err);
+      }
+    };
+
+    window.refreshProviderSession = async (providerName) => {
+      try {
+        const res = await fetch('/admin/provider-refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: providerName })
+        });
+        const data = await res.json();
+        await checkAuthAndLoad();
+        fetchLogs();
+        const isAuth = data.result?.authenticated;
+        const msg = data.result?.message || '';
+        alert(`🔄 ${providerName.toUpperCase()} Status:\n${isAuth ? '✅ READY' : '⚠️ ' + msg}`);
+      } catch (err) {
+        alert('Failed to refresh provider: ' + err);
+      }
+    };
+
+    if ($('saveAllSessionsBtn')) {
+      $('saveAllSessionsBtn').onclick = () => saveProviderSession(null);
+    }
+
+    // Login Form Submit
+    $('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const password = $('loginPassword').value;
+      const res = await fetch('/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.ok) {
+        $('loginPassword').value = '';
+        $('loginError').textContent = '';
+        checkAuthAndLoad();
+      } else {
+        $('loginError').textContent = 'Invalid operator password.';
+      }
+    };
+
+    // Logout
+    $('logoutBtn').onclick = async () => {
+      await fetch('/admin/logout', { method: 'POST' });
+      checkAuthAndLoad();
+    };
+
+    // Launch Login Browser (All)
+    $('launchLoginBtn').onclick = async () => {
+      $('launchLoginBtn').disabled = true;
+      $('launchLoginBtn').textContent = 'Launching Chrome…';
+      try {
+        const res = await fetch('/admin/launch-login', { method: 'POST' });
+        const data = await res.json();
+        showLoginBanner(null, data.message || 'Chrome has been opened! Check your taskbar to sign in.');
+      } catch (err) {
+        alert('Failed to launch browser: ' + err);
+      } finally {
+        $('launchLoginBtn').disabled = false;
+        $('launchLoginBtn').textContent = '🔐 Open Login Browser (All)';
+        checkAuthAndLoad();
+      }
+    };
+
+    // Refresh button
+    $('refreshBtn').onclick = checkAuthAndLoad;
+
+    // Copy .env snippet
+    $('copyEnvBtn').onclick = () => {
+      const url = $('tunnelDisplay').textContent;
+      const key = (overviewData && overviewData.master_key) || $('testApiKey')?.value?.trim() || 'sk-hackathon-token';
+      const snippet = `OPENAI_BASE_URL="${url}"\nOPENAI_API_KEY="${key}"\n`;
+      navigator.clipboard.writeText(snippet);
+      $('copyEnvBtn').textContent = 'Copied!';
+      setTimeout(() => $('copyEnvBtn').textContent = 'Copy .env', 2000);
+    };
+
+    // Test Console Submit
+    $('testForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const model = $('testModel').value;
+      const prompt = $('testPrompt').value;
+      const output = $('testOutput');
+      const btn = $('sendBtn');
+      const key = $('testApiKey')?.value?.trim() || (overviewData && overviewData.master_key) || 'sk-hackathon-token';
+
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+      output.textContent = 'Connecting to browser session…\n';
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (key) {
+        headers['Authorization'] = `Bearer ${key}`;
+      }
+
+      try {
+        const res = await fetch('/v1/chat/completions', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: headers,
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            stream: true
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          output.textContent = '❌ Error:\n' + JSON.stringify(err, null, 2);
+          return;
+        }
+
+        output.textContent = '';
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data:')) continue;
+            const dataStr = trimmed.replace(/^data:\s*/, '');
+            if (dataStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              if (delta) {
+                output.textContent += delta;
+                output.scrollTop = output.scrollHeight;
+              }
+            } catch (err) {}
+          }
+        }
+      } catch (err) {
+        output.textContent += '\n\nNetwork/Execution Error: ' + err;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Request';
+        checkAuthAndLoad();
+      }
+    };
+
+    // Validate All Sessions button
+    const valBtn = $('validateSessionsBtn');
+    if (valBtn) {
+      valBtn.onclick = async () => {
+        valBtn.disabled = true;
+        valBtn.textContent = 'Validating Sessions…';
+        try {
+          const res = await fetch('/admin/validate-sessions', { method: 'POST' });
+          const data = await res.json();
+          checkAuthAndLoad();
+          fetchLogs();
+          const results = data.results || {};
+          const readyCount = Object.values(results).filter(r => r.authenticated).length;
+          alert(`Validation complete!\n\n${readyCount} of ${Object.keys(results).length} providers are authenticated and ready to generate.`);
+        } catch (err) {
+          alert('Failed to validate sessions: ' + err);
+        } finally {
+          valBtn.disabled = false;
+          valBtn.textContent = '🔍 Validate All Sessions';
+        }
+      };
+    }
+
+    // Live Logs Polling
+    let lastLogText = '';
+    async function fetchLogs() {
+      try {
+        const res = await fetch('/admin/logs?limit=120');
+        if (!res.ok) return;
+        const data = await res.json();
+        const logs = data.logs || [];
+        const consoleEl = $('logsConsole');
+        if (!consoleEl) return;
+        
+        const newText = logs.length ? logs.join('\n') : 'No log entries yet.';
+        if (newText !== lastLogText) {
+          lastLogText = newText;
+          consoleEl.textContent = newText;
+          if ($('autoScrollLogs') && $('autoScrollLogs').checked) {
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if ($('clearLogsBtn')) {
+      $('clearLogsBtn').onclick = () => {
+        const consoleEl = $('logsConsole');
+        if (consoleEl) consoleEl.textContent = 'Cleared view. Waiting for new logs…';
+      };
+    }
+
+    // Poll logs every 2 seconds
+    setInterval(fetchLogs, 2000);
+    fetchLogs();
+
+    // Initial load
+    checkAuthAndLoad();
+  </script>
+</body>
+</html>
