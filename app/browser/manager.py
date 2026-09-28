@@ -153,6 +153,7 @@ class BrowserManager:
         self._auth_cache: dict[str, tuple[bool, float, str]] = {}
         self._cooldown_until: dict[str, float] = {}
         self._login_proc: Any = None
+        self._interactive_context: BrowserContext | None = None
 
     @property
     def supported_models(self) -> list[dict[str, Any]]:
@@ -514,11 +515,15 @@ class BrowserManager:
             target_desc = "all providers"
 
         # Terminate any existing login process before starting a new one
-        if self._login_proc:
+        if self._interactive_context:
             try:
-                self._login_proc.terminate()
+                await self._interactive_context.close()
             except Exception:
                 pass
+            self._interactive_context = None
+
+        if self._login_proc:
+            terminate_chrome_processes(user_data_dir=self.user_data_dir, proc=self._login_proc)
             self._login_proc = None
 
         # Prefer native Chrome launch (100% free of automation hooks, passes Google and Cloudflare tests)
@@ -560,6 +565,8 @@ class BrowserManager:
         if not context:
             raise RuntimeError("Could not launch browser for interactive login.")
 
+        self._interactive_context = context
+
         for i, url in enumerate(urls):
             if i == 0 and context.pages:
                 p = context.pages[0]
@@ -576,17 +583,21 @@ class BrowserManager:
     async def save_session_and_reload(self, provider_name: str | None = None) -> dict[str, Any]:
         """Terminate the interactive login Chrome process, flush locks, and reload/validate sessions."""
         logger.info(f"Saving sessions and re-initializing browser context (target: {provider_name or 'all'})...")
-        if self._login_proc:
+        
+        # 1. Close fallback interactive Playwright context if one was open
+        if self._interactive_context:
             try:
-                self._login_proc.terminate()
-                self._login_proc.wait(timeout=3)
+                await self._interactive_context.close()
             except Exception:
                 pass
-            self._login_proc = None
+            self._interactive_context = None
 
-        # Terminate any lingering chrome process locking user_data_dir
-        terminate_chrome_processes()
-        await asyncio.sleep(1.0)
+        # 2. Terminate the native login Chrome process tree and any processes locking self.user_data_dir
+        # Crucially: This NEVER closes the user's personal browser or active work!
+        terminate_chrome_processes(user_data_dir=self.user_data_dir, proc=self._login_proc)
+        self._login_proc = None
+
+        await asyncio.sleep(0.8)
 
         # Clear cached authentication
         if provider_name:

@@ -47,3 +47,21 @@ def test_import_profile_dry_run():
         ok, msg = import_chrome_profile(target_user_data=target, force_close_chrome=False)
         assert isinstance(ok, bool)
         assert isinstance(msg, str)
+
+
+def test_terminate_chrome_processes_safe_default():
+    from app.browser.profile_importer import terminate_chrome_processes
+    # Without user_data_dir or proc and force_all=False, it should refuse to kill personal processes
+    res = terminate_chrome_processes(user_data_dir=None, proc=None, force_all=False)
+    assert res is False
+
+
+def test_terminate_chrome_processes_proc_target():
+    from unittest.mock import MagicMock
+    from app.browser.profile_importer import terminate_chrome_processes
+    mock_proc = MagicMock()
+    mock_proc.pid = 999999999  # Non-existent PID
+    # Should attempt to kill specific process without error
+    res = terminate_chrome_processes(proc=mock_proc)
+    assert isinstance(res, bool)
+

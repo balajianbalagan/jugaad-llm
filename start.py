@@ -99,7 +99,7 @@ def handle_profile_import(profile_arg: str | None, target_user_data: Path) -> bo
     if is_chrome_running():
         print("⚠️ Chrome background processes are running (holding file locks on session cookies).")
         print("Closing background Chrome processes to release locks...")
-        terminate_chrome_processes()
+        terminate_chrome_processes(force_all=True)
         time.sleep(1.0)
 
     ok, msg = import_chrome_profile(
@@ -229,13 +229,8 @@ def run_interactive_login(user_data_dir: Path, auto_import: bool = False) -> Non
 
     if chrome_proc:
         print("Closing setup browser window to release locks for gateway service...")
-        try:
-            chrome_proc.terminate()
-            chrome_proc.wait(timeout=3)
-        except Exception:
-            pass
-        # Ensure lingering processes are terminated so SQLite lock is freed
-        time.sleep(1.0)
+        terminate_chrome_processes(user_data_dir=user_data_dir, proc=chrome_proc)
+        time.sleep(0.8)
 
     print("✅ Browser authentication saved! Starting LLM Gateway...\n")
 

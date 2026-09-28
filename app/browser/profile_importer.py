@@ -150,30 +150,98 @@ def is_chrome_running() -> bool:
             return False
 
 
-def terminate_chrome_processes() -> bool:
-    """Terminate running Chrome background/foreground processes to release file locks."""
-    if platform.system() == "Windows":
+def terminate_chrome_processes(
+    user_data_dir: Path | str | None = None,
+    proc: subprocess.Popen | None = None,
+    force_all: bool = False,
+) -> bool:
+    """
+    Terminate Chrome browser processes safely.
+    
+    If user_data_dir or proc is specified:
+      ONLY terminates the specific process handle and any processes associated
+      with that specific profile directory (e.g. data/chrome_profile).
+      CRITICALLY: The user's personal browser and dashboard windows are NEVER touched!
+      
+    If neither is specified:
+      Unless force_all=True, it refuses to perform global taskkill to avoid closing
+      the user's personal browser or active work.
+    """
+    terminated_any = False
+
+    # 1. Terminate specific subprocess tree if provided
+    if proc and hasattr(proc, "pid") and proc.pid:
         try:
-            subprocess.run(
-                ["taskkill", "/F", "/IM", "chrome.exe", "/T"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=False,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
-            time.sleep(1.0)
-            return not is_chrome_running()
+            if platform.system() == "Windows":
+                subprocess.run(
+                    ["taskkill", "/F", "/PID", str(proc.pid), "/T"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+            else:
+                proc.kill()
+            terminated_any = True
         except Exception as e:
-            logger.warning(f"Failed to terminate Chrome processes: {e}")
-            return False
-    else:
+            logger.debug(f"Could not kill process PID {proc.pid}: {e}")
+
+    # 2. Terminate processes specifically belonging to user_data_dir
+    if user_data_dir:
+        target_dir_str = str(Path(user_data_dir).resolve()).lower()
         try:
-            subprocess.run(["pkill", "-9", "-f", "chrome"], check=False)
-            time.sleep(1.0)
-            return not is_chrome_running()
-        except Exception as e:
-            logger.warning(f"Failed to kill chrome: {e}")
-            return False
+            import psutil
+            for p in psutil.process_iter(["pid", "name", "cmdline"]):
+                try:
+                    p_name = (p.info.get("name") or "").lower()
+                    if any(browser in p_name for browser in ("chrome", "chromium", "msedge")):
+                        cmdline = p.info.get("cmdline") or []
+                        cmdline_str = " ".join(cmdline).lower()
+                        if target_dir_str in cmdline_str:
+                            logger.info(f"Closing login browser process {p.info['pid']} ({p_name}) for profile {target_dir_str}")
+                            p.kill()
+                            terminated_any = True
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+        except ImportError:
+            if platform.system() == "Windows":
+                try:
+                    ps_cmd = f"Get-CimInstance Win32_Process -Filter \"Name = 'chrome.exe'\" | Where-Object {{ $_.CommandLine -and $_.CommandLine.ToLower().Contains('{target_dir_str}') }} | ForEach-Object {{ Stop-Process -Id $_.ProcessId -Force }}"
+                    subprocess.run(["powershell", "-NoProfile", "-Command", ps_cmd], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                    terminated_any = True
+                except Exception:
+                    pass
+        time.sleep(0.5)
+        return terminated_any
+
+    # 3. Only if force_all is explicitly True do we perform global kill
+    if force_all:
+        logger.warning("Performing global Chrome termination (requested by force_all=True)")
+        if platform.system() == "Windows":
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/IM", "chrome.exe", "/T"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+                time.sleep(1.0)
+                return not is_chrome_running()
+            except Exception as e:
+                logger.warning(f"Failed to terminate Chrome processes: {e}")
+                return False
+        else:
+            try:
+                subprocess.run(["pkill", "-9", "-f", "chrome"], check=False)
+                time.sleep(1.0)
+                return not is_chrome_running()
+            except Exception as e:
+                logger.warning(f"Failed to kill chrome: {e}")
+                return False
+
+    logger.debug("terminate_chrome_processes called without user_data_dir/proc and force_all=False; skipped global taskkill.")
+    return False
 
 
 # Essential files and subdirectories needed for session cookies, accounts, and local state
@@ -227,7 +295,7 @@ def import_chrome_profile(
     if is_chrome_running():
         if force_close_chrome:
             logger.info("Closing Chrome to release database locks...")
-            terminate_chrome_processes()
+            terminate_chrome_processes(force_all=True)
             if is_chrome_running():
                 return False, "Could not terminate existing Chrome processes. Please close Chrome manually."
         else:

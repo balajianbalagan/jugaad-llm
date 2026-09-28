@@ -118,7 +118,7 @@ class GrokProvider(BaseBrowserProvider):
 
                 start_time = time.time()
                 last_len = 0
-                idle_count = 0
+                last_change_time = time.time()
                 started_generating = False
 
                 while time.time() - start_time < timeout:
@@ -126,35 +126,42 @@ class GrokProvider(BaseBrowserProvider):
 
                     bubbles = await page.query_selector_all(assistant_selector)
                     if len(bubbles) > initial_count:
-                        started_generating = True
                         latest_bubble = bubbles[-1]
                         current_text = await latest_bubble.inner_text()
 
                         if len(current_text) > last_len:
                             chunk = current_text[last_len:]
                             last_len = len(current_text)
-                            idle_count = 0
+                            last_change_time = time.time()
+                            if not started_generating and current_text.strip():
+                                started_generating = True
                             yield chunk
-                        else:
-                            idle_count += 1
-                            if idle_count >= 4:
+                        elif started_generating and last_len > 0:
+                            if time.time() - last_change_time >= 1.8:
                                 break
                     elif not started_generating and bubbles and not existing_bubbles:
                         # First bubble in empty chat
-                        started_generating = True
                         latest_bubble = bubbles[-1]
                         current_text = await latest_bubble.inner_text()
                         if len(current_text) > last_len:
                             chunk = current_text[last_len:]
                             last_len = len(current_text)
+                            last_change_time = time.time()
+                            if not started_generating and current_text.strip():
+                                started_generating = True
                             yield chunk
+                        elif started_generating and last_len > 0:
+                            if time.time() - last_change_time >= 1.8:
+                                break
 
-                if not started_generating:
+                if not started_generating or last_len == 0:
                     bubbles = await page.query_selector_all(assistant_selector)
                     if len(bubbles) > initial_count:
-                        yield await bubbles[-1].inner_text()
-                    else:
-                        raise ProviderTimeoutError("Grok did not produce a response within the timeout.")
+                        final_text = (await bubbles[-1].inner_text()).strip()
+                        if final_text:
+                            yield final_text
+                            return
+                    raise ProviderTimeoutError("Grok did not produce a response within the timeout.")
 
             except Exception as e:
                 logger.error(f"Grok generation error: {e}", exc_info=True)

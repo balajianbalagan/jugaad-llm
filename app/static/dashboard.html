@@ -266,6 +266,16 @@
       margin: 100px auto;
     }
     .hidden { display: none !important; }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    .loading-pulse {
+      display: inline-block;
+      color: var(--accent);
+      animation: pulse-glow 1.2s infinite;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -390,7 +400,10 @@
           <button type="submit" id="sendBtn">Send Request</button>
         </form>
 
-        <h3 style="font-size: 14px; margin: 18px 0 8px 0;">Response</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 0 8px 0;">
+          <h3 style="font-size: 14px; margin: 0;">Response</h3>
+          <span id="streamStatusBadge" class="status-tag hidden" style="font-size: 11px;">● Ready</span>
+        </div>
         <div id="testOutput" class="console-output">Waiting for your query…</div>
       </div>
     </div>
@@ -533,6 +546,12 @@
 
     window.saveProviderSession = async (providerName) => {
       const label = providerName ? providerName.toUpperCase() : 'ALL PROVIDERS';
+      const saveBtn = $('bannerSaveBtn');
+      const origText = saveBtn ? saveBtn.textContent : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '⏳ Saving & Closing Setup Windows...';
+      }
       try {
         const res = await fetch('/admin/save-session', {
           method: 'POST',
@@ -544,10 +563,15 @@
         await checkAuthAndLoad();
         fetchLogs();
         const isAuth = data.result?.authenticated;
-        const msg = data.result?.message || 'Session saved & reloaded.';
-        alert(`💾 Save & Refresh for ${label}:\nStatus: ${isAuth ? '✅ READY (Session Active)' : '⚠️ ' + msg}`);
+        const msg = data.result?.message || 'Session saved & login windows closed.';
+        alert(`💾 Save & Refresh for ${label}:\nStatus: ${isAuth ? '✅ READY (Session Active)' : '⚠️ ' + msg}\n\nSetup browser windows closed. Personal browser tabs & dashboard remain active.`);
       } catch (err) {
         alert('Failed to save session: ' + err);
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = origText;
+        }
       }
     };
 
@@ -634,16 +658,29 @@
       const prompt = $('testPrompt').value;
       const output = $('testOutput');
       const btn = $('sendBtn');
+      const statusBadge = $('streamStatusBadge');
       const key = $('testApiKey')?.value?.trim() || (overviewData && overviewData.master_key) || 'sk-hackathon-token';
 
       btn.disabled = true;
-      btn.textContent = 'Generating…';
-      output.textContent = 'Connecting to browser session…\n';
+      btn.textContent = `⏳ Dispatching (${model})…`;
+
+      if (statusBadge) {
+        statusBadge.classList.remove('hidden', 'ready', 'needs_login');
+        statusBadge.classList.add('rate_limited');
+        statusBadge.textContent = `● Submitting to ${model.toUpperCase()}…`;
+      }
+
+      output.textContent = `🚀 [1/3] Dispatching prompt to ${model.toUpperCase()} browser session...\n⏳ [2/3] Waiting for model to generate response...\n`;
 
       const headers = { 'Content-Type': 'application/json' };
       if (key) {
         headers['Authorization'] = `Bearer ${key}`;
       }
+
+      let hasReceivedTokens = false;
+      let hasError = false;
+      let tokenCount = 0;
+      const startTime = performance.now();
 
       try {
         const res = await fetch('/v1/chat/completions', {
@@ -658,12 +695,22 @@
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          output.textContent = '❌ Error:\n' + JSON.stringify(err, null, 2);
+          hasError = true;
+          const err = await res.json().catch(() => ({ message: res.statusText }));
+          output.textContent = `❌ Request Failed (${res.status}):\n` + JSON.stringify(err, null, 2);
+          if (statusBadge) {
+            statusBadge.classList.remove('rate_limited');
+            statusBadge.classList.add('needs_login');
+            statusBadge.textContent = '❌ Request Failed';
+          }
           return;
         }
 
-        output.textContent = '';
+        output.textContent = `⚡ [3/3] Connected to ${model.toUpperCase()} stream! Awaiting first token...\n`;
+        if (statusBadge) {
+          statusBadge.textContent = `● Awaiting tokens...`;
+        }
+
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -682,20 +729,57 @@
             if (dataStr === '[DONE]') continue;
             try {
               const parsed = JSON.parse(dataStr);
+              if (parsed.error) {
+                hasError = true;
+                output.textContent += '\n\n❌ [Provider Error]: ' + (parsed.error.message || JSON.stringify(parsed.error));
+                if (statusBadge) {
+                  statusBadge.classList.remove('rate_limited', 'ready');
+                  statusBadge.classList.add('needs_login');
+                  statusBadge.textContent = '❌ Error';
+                }
+              }
               const delta = parsed.choices?.[0]?.delta?.content;
               if (delta) {
+                if (!hasReceivedTokens) {
+                  hasReceivedTokens = true;
+                  output.textContent = ''; // Clear loading message on first real token
+                  if (statusBadge) {
+                    statusBadge.classList.remove('rate_limited');
+                    statusBadge.classList.add('ready');
+                    statusBadge.textContent = `● Streaming tokens...`;
+                  }
+                }
                 output.textContent += delta;
+                tokenCount++;
                 output.scrollTop = output.scrollHeight;
               }
             } catch (err) {}
           }
         }
+
+        const elapsedSec = ((performance.now() - startTime) / 1000).toFixed(1);
+        if (!hasReceivedTokens && !hasError) {
+          output.textContent += `\n\n⚠️ No tokens were received from ${model.toUpperCase()} within the session window.\n\nTroubleshooting tips:\n1. Check if ${model.toUpperCase()} requires login using the 🔑 Login button above.\n2. Verify the Live Gateway Logs console below for detailed provider logs.\n3. The session tab may have been rate limited or stuck on a verification prompt.`;
+          if (statusBadge) {
+            statusBadge.classList.remove('ready', 'rate_limited');
+            statusBadge.classList.add('needs_login');
+            statusBadge.textContent = '⚠️ Empty Response';
+          }
+        } else if (hasReceivedTokens && statusBadge) {
+          statusBadge.textContent = `✅ Complete (${elapsedSec}s · ${tokenCount} chunks)`;
+        }
       } catch (err) {
-        output.textContent += '\n\nNetwork/Execution Error: ' + err;
+        output.textContent += '\n\n❌ Network/Execution Error: ' + err;
+        if (statusBadge) {
+          statusBadge.classList.remove('rate_limited', 'ready');
+          statusBadge.classList.add('needs_login');
+          statusBadge.textContent = '❌ Network Error';
+        }
       } finally {
         btn.disabled = false;
         btn.textContent = 'Send Request';
         checkAuthAndLoad();
+        fetchLogs();
       }
     };
 
