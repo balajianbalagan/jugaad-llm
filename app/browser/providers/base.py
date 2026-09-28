@@ -262,7 +262,17 @@ class BaseBrowserProvider(ABC):
             except Exception:
                 continue
 
-        await input_el.press("Enter")
+        try:
+            if input_el:
+                await input_el.press("Enter")
+                return
+        except Exception:
+            pass
+
+        try:
+            await page.keyboard.press("Enter")
+        except Exception:
+            pass
 
     @abstractmethod
     async def check_auth(self, context: BrowserContext) -> tuple[bool, str]:

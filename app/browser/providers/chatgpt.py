@@ -51,17 +51,12 @@ class ChatGPTProvider(BaseBrowserProvider):
                 await asyncio.sleep(0.5)
 
             # Check if login button is displayed
-            login_el = await page.query_selector('button[data-testid="login-button"], a[href*="login"]')
-            chat_el = await page.query_selector('#prompt-textarea, div[contenteditable="true"]')
-
-            if chat_el and not login_el:
-                return True, "Authenticated (ChatGPT session active)"
+            # If chat input is present, ChatGPT is ready to accept queries
+            if chat_el:
+                msg = "Authenticated (ChatGPT session active)" if not login_el else "Ready (ChatGPT free tier accessible)"
+                return True, msg
             if login_el:
                 return False, "Not authenticated. Sign in with 'python start.py --login'"
-            
-            # If chat input is present even without explicit user profile, free tier is usable
-            if chat_el:
-                return True, "Ready (ChatGPT free tier accessible)"
 
             return False, "Login required at chatgpt.com"
         except Exception as e:

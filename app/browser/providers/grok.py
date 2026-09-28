@@ -102,7 +102,7 @@ class GrokProvider(BaseBrowserProvider):
                 await self.enter_text_safely(page, input_el, prompt)
 
                 # Count existing assistant turns to avoid reading old messages
-                assistant_selector = '.message-bubble, div[class*="response"], .markdown, div[class*="bubble"], div[class*="prose"], div[dir="auto"]'
+                assistant_selector = '[data-message-author-role="assistant"], div[class*="assistant"], .message-bubble:not([class*="user"]), div[class*="response"], .markdown, div[class*="prose"]'
                 existing_bubbles = await page.query_selector_all(assistant_selector)
                 initial_count = len(existing_bubbles)
                 logger.info(f"[{self.display_name}] Existing assistant responses: {initial_count}")
