@@ -1,4 +1,4 @@
-# 🧙‍♂️ llm-jugaad: The Free LLM Gateway
+# 🧙‍♂️ jugaad-llm: The Free LLM Gateway
 
 <p align="center">
   <img src="assets/llm-jugaad-hero.jpg" alt="llm-jugaad magic man conjuring tokens" width="850" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -10,7 +10,8 @@
 
 <p align="center">
   <b>✨ Conjure unlimited free LLM tokens from your free web sessions with pure Jugaad ingenuity. ✨</b><br>
-  <i>Drop-in OpenAI- and OpenRouter-compatible API gateway running locally on your laptop.</i>
+  <i>Drop-in OpenAI- and OpenRouter-compatible API gateway running locally on your laptop.</i><br/>
+  <i>Made with 💖 by  <a href="https://balajianbalagan.pages.dev/">Balaji Anbalagan</a></i>
 </p>
 
 <p align="center">
