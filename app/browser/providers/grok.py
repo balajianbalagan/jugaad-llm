@@ -79,7 +79,7 @@ class GrokProvider(BaseBrowserProvider):
                 else:
                     await page.goto("https://grok.com/", wait_until="domcontentloaded", timeout=20000)
 
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(0.15)
 
                 # Dismiss any popups or banners
                 await self.dismiss_banners(page)
@@ -122,7 +122,7 @@ class GrokProvider(BaseBrowserProvider):
                 started_generating = False
 
                 while time.time() - start_time < timeout:
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.06)
 
                     bubbles = await page.query_selector_all(assistant_selector)
                     if len(bubbles) > initial_count:

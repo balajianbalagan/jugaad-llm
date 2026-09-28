@@ -91,7 +91,7 @@ class HuggingFaceProvider(BaseBrowserProvider):
                     except Exception:
                         await page.goto("https://huggingface.co/chat", wait_until="domcontentloaded", timeout=20000)
 
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(0.15)
                 await self.dismiss_banners(page)
 
                 candidates = [
@@ -128,7 +128,7 @@ class HuggingFaceProvider(BaseBrowserProvider):
                 started_generating = False
 
                 while time.time() - start_time < timeout:
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.06)
 
                     bubbles = await page.query_selector_all(assistant_selector)
                     if len(bubbles) > initial_count:

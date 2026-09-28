@@ -53,7 +53,7 @@ class DeepSeekProvider(BaseBrowserProvider):
             page = await self._get_page(context)
             if "chat.deepseek.com" not in page.url:
                 await page.goto(self.home_url, wait_until="domcontentloaded", timeout=20000)
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.5)
 
             if "sign_in" in page.url:
                 return False, "Not authenticated. Sign in with 'python start.py --login'"
@@ -93,7 +93,7 @@ class DeepSeekProvider(BaseBrowserProvider):
                     except Exception:
                         await page.goto("https://chat.deepseek.com/", wait_until="domcontentloaded", timeout=20000)
 
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(0.15)
 
                 if "sign_in" in page.url:
                     raise AuthenticationRequiredError("DeepSeek requires login. Run 'python start.py --login'")
@@ -159,7 +159,7 @@ class DeepSeekProvider(BaseBrowserProvider):
                 started_generating = False
 
                 while time.time() - start_time < timeout:
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.06)
 
                     bubbles = await page.query_selector_all(assistant_selector)
                     if len(bubbles) > initial_count:

@@ -225,4 +225,5 @@ async def overview(request: Request):
         "tunnel_url": tunnel_url,
         "session_hours": request.app.state.settings.dashboard_session_hours,
         "master_key": request.app.state.settings.litellm_master_key or "",
+        "headless": getattr(browser_manager, "headless", False),
     }

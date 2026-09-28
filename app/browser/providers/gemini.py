@@ -55,7 +55,7 @@ class GeminiProvider(BaseBrowserProvider):
             if "gemini.google.com" not in page.url:
                 logger.info(f"[{self.display_name}] Checking auth, navigating to {self.home_url}...")
                 await page.goto(self.home_url, wait_until="domcontentloaded", timeout=20000)
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.5)
 
             await self.dismiss_banners(page)
 
@@ -104,7 +104,7 @@ class GeminiProvider(BaseBrowserProvider):
                     except Exception:
                         await page.goto("https://gemini.google.com/app", wait_until="domcontentloaded", timeout=20000)
 
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(0.15)
                 await self.dismiss_banners(page)
 
                 if "accounts.google.com" in page.url or "signin" in page.url:
@@ -154,7 +154,7 @@ class GeminiProvider(BaseBrowserProvider):
                 started_generating = False
 
                 while time.time() - start_time < timeout:
-                    await asyncio.sleep(0.3)
+                    await asyncio.sleep(0.06)
 
                     bubbles = await page.query_selector_all(assistant_selector)
                     if len(bubbles) > initial_count:

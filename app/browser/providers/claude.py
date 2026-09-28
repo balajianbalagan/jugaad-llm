@@ -53,7 +53,7 @@ class ClaudeProvider(BaseBrowserProvider):
             page = await self._get_page(context)
             if "claude.ai" not in page.url:
                 await page.goto("https://claude.ai/new", wait_until="domcontentloaded", timeout=20000)
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.5)
 
             current_url = page.url
             if "login" in current_url:
@@ -84,7 +84,7 @@ class ClaudeProvider(BaseBrowserProvider):
             try:
                 # Open new chat
                 await page.goto("https://claude.ai/new", wait_until="domcontentloaded", timeout=25000)
-                await asyncio.sleep(1.0)
+                await asyncio.sleep(0.15)
                 await self.wait_for_cloudflare_challenge(page, timeout=10.0)
 
                 # Check if login is needed
@@ -132,7 +132,7 @@ class ClaudeProvider(BaseBrowserProvider):
                 started_generating = False
 
                 while time.time() - start_time < timeout:
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.06)
 
                     # Check for rate limit banner
                     page_text = await page.inner_text('body')

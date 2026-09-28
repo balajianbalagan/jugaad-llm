@@ -91,7 +91,7 @@ class K2ThinkProvider(BaseBrowserProvider):
                 logger.info(f"[{self.display_name}] Preparing K2 Think session...")
                 if "ifm.ai" not in page.url and "k2think.ai" not in page.url:
                     await page.goto(self.home_url, wait_until="domcontentloaded", timeout=25000)
-                    await asyncio.sleep(1.5)
+                    await asyncio.sleep(0.15)
 
                 await self.dismiss_banners(page)
 
@@ -130,7 +130,7 @@ class K2ThinkProvider(BaseBrowserProvider):
                 started_generating = False
 
                 while time.time() - start_time < timeout:
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.06)
 
                     bubbles = await page.query_selector_all(assistant_selector)
                     if len(bubbles) > initial_count:

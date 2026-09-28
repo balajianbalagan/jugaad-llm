@@ -204,6 +204,19 @@ Any OpenAI-compatible library can specify these model IDs:
 
 ---
 
+## 🚀 Speed Optimizations & Stealth Headless Mode
+
+`jugaad-llm` is engineered for ultra-low latency token delivery and minimal resource footprint:
+
+- **⚡ Stealth Headless Mode (`--headless`)**: Runs completely in the background without opening visible browser windows. Uses modern Chromium `--headless=new` with anti-detection evasions (hardware concurrency mocking, 24-bit screen depth emulation, and headless user-agent masking) to pass Cloudflare and anti-bot checks smoothly.
+- **🔥 Context Pre-Warming**: At server startup, browser contexts and provider sessions are automatically pre-warmed in the background so your very first API call suffers zero cold-start delay.
+- **⚡ In-Page DOM Batching**: Banners, cookie prompts, and popups are dismissed via single in-page JavaScript batch evaluations (<2ms) rather than dozens of sequential CDP round-trips (~500ms).
+- **⏩ Instant Text Injection**: Injects prompts directly into rich-text editors using `document.execCommand('insertText')` and reactive input event dispatching rather than slow keystroke simulation.
+- **🌊 High-Frequency SSE Streaming**: Reduced token polling interval to 60ms for silky-smooth real-time streaming responses in downstream applications.
+- **🚫 Network Route Blocking**: Blocks third-party telemetry, analytics, and tracking beacons (Sentry, Google Analytics, Datadog, Amplitude, Statsig) to preserve bandwidth and cut network latency.
+
+---
+
 ## 💻 Client Integration Examples
 
 ### Python (OpenAI SDK)
@@ -278,6 +291,12 @@ Set `ENABLE_API_KEYS=true` and paste your free key in `.env`.
 ```bash
 # Start locally (Landing page at http://localhost:4000/, Dashboard at /dashboard)
 python start.py
+
+# Start in stealth headless mode (runs in background without browser windows)
+python start.py --headless
+
+# Explicitly start with visible browser window
+python start.py --headful
 
 # Start with visible login window for free accounts
 python start.py --login

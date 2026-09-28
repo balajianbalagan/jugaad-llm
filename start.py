@@ -4,13 +4,15 @@ Unified entrypoint for jugaad-llm (Free LLM Token Gateway).
 
 Usage:
   python start.py                         # Normal run (local http://localhost:4000)
+  python start.py --headless              # Run browser silently in background (fast & stealthy)
+  python start.py --headful               # Run with visible browser window
   python start.py --login                 # Sign in to ChatGPT, Claude, DeepSeek, Grok (passes bot tests!)
   python start.py --import-profile        # Import cookies/sessions from your real Google Chrome profile
   python start.py --list-profiles         # Show discovered Chrome profiles and logged-in Google accounts
   python start.py --cdp 9222              # Connect directly to your live running Chrome browser
   python start.py --launch-chrome         # Launch regular Chrome with remote debugging port 9222 enabled
   python start.py --tunnel                # Run with public HTTPS ngrok tunnel for hackathons
-  python start.py --login --tunnel        # Sign in first, then expose via ngrok tunnel
+  python start.py --headless --tunnel     # Headless background gateway with ngrok tunnel
 """
 
 from __future__ import annotations
@@ -238,14 +240,22 @@ def run_interactive_login(user_data_dir: Path, auto_import: bool = False) -> Non
     print("✅ Browser authentication saved! Starting LLM Gateway...\n")
 
 
-def print_banner(local_url: str, public_url: str | None = None, master_key: str | None = None, cdp_mode: str | None = None):
+def print_banner(
+    local_url: str,
+    public_url: str | None = None,
+    master_key: str | None = None,
+    cdp_mode: str | None = None,
+    headless: bool = False,
+):
     api_key_str = master_key or "sk-hackathon-token"
+    browser_mode = "HEADLESS (stealth background)" if headless else "VISIBLE (headful window)"
     print("\n" + "═" * 72)
     print(" 🧙‍♂️ JUGAAD-LLM: FREE LLM TOKEN GATEWAY IS LIVE!")
     print("─" * 72)
     print(f" 🏠 Landing Page:             {local_url}/")
     print(f" 🎛️  Dashboard & Test Console: {local_url}/dashboard")
     print(f" 🔗 Local OpenAI Base URL:    {local_url}/v1")
+    print(f" 🖥️  Browser Mode:            {browser_mode}")
     if public_url:
         print(f" 🌍 Public Ngrok Base URL:   {public_url}/v1")
     if cdp_mode:
@@ -307,10 +317,16 @@ def main():
     parser.add_argument("--cdp", nargs="?", const="http://localhost:9222", default=None, help="Connect to an existing Chrome browser with remote debugging (e.g. 9222 or http://localhost:9222)")
     parser.add_argument("--launch-chrome", action="store_true", help="Launch regular Google Chrome with remote debugging port 9222 enabled")
     parser.add_argument("--tunnel", action="store_true", help="Expose temporary HTTPS ngrok tunnel")
-    parser.add_argument("--headless", action="store_true", help="Run browser in background headless mode")
+    parser.add_argument("--headless", dest="headless", action="store_true", default=None, help="Run browser silently in background headless mode (fast & stealthy)")
+    parser.add_argument("--no-headless", "--headful", dest="headless", action="store_false", help="Run browser in visible window mode (shows Chrome UI)")
     parser.add_argument("--port", type=int, default=None, help="Port to run gateway on (default: from .env or 4000)")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host interface (default: 0.0.0.0)")
     args = parser.parse_args()
+
+    # Apply headless override early and clear cache so Settings parses the updated environment
+    if args.headless is not None:
+        os.environ["BROWSER_HEADLESS"] = "true" if args.headless else "false"
+        get_settings.cache_clear()
 
     settings = get_settings()
     port = args.port or settings.litellm_port
@@ -363,9 +379,6 @@ def main():
         os.environ["BROWSER_CDP_URL"] = cdp_url
         print(f"🔌 Configured CDP connection to: {cdp_url}")
 
-    if args.headless:
-        os.environ["BROWSER_HEADLESS"] = "true"
-
     # Step 3: Establish tunnel if requested
     tunnel = None
     public_url = None
@@ -384,6 +397,7 @@ def main():
         public_url=public_url,
         master_key=settings.litellm_master_key,
         cdp_mode=cdp_url,
+        headless=settings.browser_headless,
     )
 
     # Step 4: Run server

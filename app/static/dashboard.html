@@ -296,6 +296,7 @@
         <img src="/static/jugaad-llm-badge.jpg" style="width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,240,255,0.4);">
         jugaad-<span>llm</span>
         <span class="badge">v0.2.0</span>
+        <span id="browserModeBadge" class="badge" style="background: rgba(0, 240, 255, 0.15); color: var(--accent); border-color: rgba(0, 240, 255, 0.3);">Mode</span>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
         <a href="/" class="secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 6px; text-decoration: none; border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--ink);">🏠 Landing Page</a>
@@ -440,6 +441,13 @@
       const tunnel = overviewData.tunnel_url;
       const apiBase = tunnel ? `${tunnel}/v1` : `${window.location.origin}/v1`;
       $('tunnelDisplay').textContent = apiBase;
+
+      // Update browser mode badge
+      if ($('browserModeBadge') && overviewData.headless !== undefined) {
+        const isHeadless = overviewData.headless;
+        $('browserModeBadge').textContent = isHeadless ? 'Headless' : 'Visible';
+        $('browserModeBadge').style.color = isHeadless ? '#10b981' : 'var(--accent)';
+      }
 
       // Render providers
       const container = $('providerList');

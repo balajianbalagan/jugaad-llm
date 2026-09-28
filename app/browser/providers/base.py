@@ -114,56 +114,43 @@ class BaseBrowserProvider(ABC):
         return False
 
     async def dismiss_banners(self, page: Page) -> None:
-        """Dismiss cookie consent banners, onboarding dialogs, and promotional popups."""
-        dismiss_selectors = [
-            # Claude & OneTrust cookie banners
-            '#onetrust-accept-btn-handler',
-            'button[id*="onetrust-accept"]',
-            'button:has-text("Accept all cookies")',
-            'button:has-text("Accept All Cookies")',
-            'button:has-text("Reject All")',
-            'button:has-text("Reject all")',
-            'button:has-text("Reject")',
-            'button:has-text("Accept all")',
-            'button:has-text("Accept All")',
-            'button:has-text("Accept cookies")',
-            'button:has-text("Accept Cookies")',
-            'button:has-text("Accept")',
-            'button:has-text("Allow all")',
-            'button:has-text("I accept")',
-            'button:has-text("I agree")',
-            'button:has-text("Acknowledge")',
-            'button:has-text("Got it")',
-            'button:has-text("I understand")',
-            'button[id*="accept"]',
-            'button[class*="accept"]',
-            'div[class*="cookie"] button',
-            'div[id*="cookie"] button',
-            # Onboarding & Welcome popups
-            'button:has-text("Get started")',
-            'button:has-text("Get Started")',
-            'button:has-text("Start chatting")',
-            'button:has-text("Start Chatting")',
-            'button:has-text("Continue without account")',
-            'button:has-text("Continue as guest")',
-            'button:has-text("Stay logged out")',
-            'button:has-text("Dismiss")',
-            'button:has-text("Not now")',
-            'button:has-text("Maybe later")',
-            'button:has-text("Close")',
-            'button[aria-label="Close"]',
-            'button[aria-label="Dismiss"]',
-            'button[data-testid="close-button"]',
-        ]
-        for sel in dismiss_selectors:
-            try:
-                btn = await page.query_selector(sel)
-                if btn and await btn.is_visible():
-                    logger.info(f"[{self.display_name}] Auto-dismissing banner/modal: {sel}")
-                    await btn.click()
-                    await asyncio.sleep(0.3)
-            except Exception:
-                pass
+        """Dismiss cookie consent banners, onboarding dialogs, and promotional popups with zero IPC lag."""
+        try:
+            await page.evaluate("""
+            () => {
+                const dismissKeywords = [
+                    "accept all cookies", "accept all", "accept cookies", "accept",
+                    "reject all", "reject", "allow all", "i accept", "i agree",
+                    "acknowledge", "got it", "i understand", "get started",
+                    "start chatting", "continue without account", "continue as guest",
+                    "stay logged out", "dismiss", "close", "not now", "maybe later"
+                ];
+                const btns = Array.from(document.querySelectorAll('button, [role="button"], a.btn, input[type="button"]'));
+                for (const b of btns) {
+                    if (b.offsetParent === null || b.disabled) continue;
+                    const txt = (b.innerText || b.textContent || "").trim().toLowerCase();
+                    const id = (b.id || "").toLowerCase();
+                    const cls = (b.className || "").toLowerCase();
+                    const aria = (b.getAttribute("aria-label") || "").toLowerCase();
+                    if (
+                        id.includes("onetrust-accept") ||
+                        id.includes("accept") ||
+                        cls.includes("cookie") ||
+                        dismissKeywords.includes(txt) ||
+                        dismissKeywords.includes(aria)
+                    ) {
+                        b.click();
+                        return;
+                    }
+                }
+                const closeBtn = document.querySelector('button[aria-label="Close"], button[aria-label="Dismiss"], button[data-testid="close-button"], #onetrust-accept-btn-handler');
+                if (closeBtn && closeBtn.offsetParent !== null && !closeBtn.disabled) {
+                    closeBtn.click();
+                }
+            }
+            """)
+        except Exception:
+            pass
 
     async def find_visible_input(
         self,
@@ -172,7 +159,6 @@ class BaseBrowserProvider(ABC):
         timeout: float = 15.0,
     ) -> Any | None:
         """Search across selectors and return the first element that is genuinely visible in DOM."""
-        logger.info(f"[{self.display_name}] Searching for chat input across {len(selectors)} candidate selectors...")
         start = time.time()
         while time.time() - start < timeout:
             await self.dismiss_banners(page)
@@ -182,7 +168,8 @@ class BaseBrowserProvider(ABC):
                     elements = await page.query_selector_all(sel)
                     for el in elements:
                         try:
-                            # Skip invisible fallback elements (e.g. ChatGPT wcDTda_fallbackTextarea)
+                            if not await el.is_visible():
+                                continue
                             class_name = (await el.get_attribute("class") or "").lower()
                             if "fallback" in class_name:
                                 continue
@@ -192,20 +179,12 @@ class BaseBrowserProvider(ABC):
                             tabindex = await el.get_attribute("tabindex")
                             if tabindex == "-1":
                                 continue
-                            if await el.is_visible():
-                                tag_name = await el.evaluate("el => el.tagName.toLowerCase()")
-                                ph = await el.get_attribute("placeholder") or ""
-                                aria = await el.get_attribute("aria-label") or ""
-                                logger.info(
-                                    f"[{self.display_name}] Matched chat input via '{sel}': "
-                                    f"<{tag_name}> placeholder='{ph[:30]}' aria-label='{aria[:30]}' class='{class_name[:35]}'"
-                                )
-                                return el
+                            return el
                         except Exception:
                             continue
                 except Exception:
                     continue
-            await asyncio.sleep(0.4)
+            await asyncio.sleep(0.08)
 
         try:
             curr_url = page.url
@@ -219,28 +198,42 @@ class BaseBrowserProvider(ABC):
         return None
 
     async def enter_text_safely(self, page: Page, input_el: Any, text: str) -> None:
-        """Safely focus, clear, and enter text into textarea or contenteditable div."""
-        logger.info(f"[{self.display_name}] Entering prompt ({len(text)} chars) into chat input...")
+        """Safely focus, clear, and enter text into textarea or contenteditable div with minimum latency."""
         try:
             await input_el.focus()
+            await input_el.click()
         except Exception:
             pass
-        await input_el.click()
-        await asyncio.sleep(0.2)
+
         try:
             tag_name = await input_el.evaluate("el => el.tagName.toLowerCase()")
             is_contenteditable = await input_el.evaluate("el => el.isContentEditable")
             if tag_name in ("textarea", "input") and not is_contenteditable:
                 await input_el.fill(text)
-                # Dispatch input and change events for reactive frontends
                 await input_el.dispatch_event("input")
                 await input_el.dispatch_event("change")
             else:
                 # Contenteditable rich text (Quill, ProseMirror, Lexical)
-                await page.keyboard.press("Control+A")
-                await page.keyboard.press("Backspace")
-                await page.keyboard.insert_text(text)
-                await input_el.dispatch_event("input")
+                inserted = await page.evaluate("""
+                ([el, val]) => {
+                    try {
+                        el.focus();
+                        document.execCommand('selectAll', false, null);
+                        document.execCommand('delete', false, null);
+                        const ok = document.execCommand('insertText', false, val);
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                        return ok;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+                """, [input_el, text])
+                if not inserted:
+                    await page.keyboard.press("Control+A")
+                    await page.keyboard.press("Backspace")
+                    await page.keyboard.insert_text(text)
+                    await input_el.dispatch_event("input")
         except Exception as err:
             logger.debug(f"[{self.display_name}] Primary input method failed ({err}), falling back...")
             try:
@@ -249,8 +242,9 @@ class BaseBrowserProvider(ABC):
                 await page.keyboard.insert_text(text)
             except Exception:
                 await input_el.fill(text)
-        await asyncio.sleep(0.3)
-        logger.info(f"[{self.display_name}] Successfully entered prompt text.")
+
+        # Micro-tick for reactive frameworks to bind state before sending
+        await asyncio.sleep(0.05)
 
     async def click_send_or_press_enter(
         self,
@@ -259,26 +253,16 @@ class BaseBrowserProvider(ABC):
         send_selectors: list[str],
     ) -> None:
         """Find and click send button, or fall back to pressing Enter."""
-        send_btn = None
         for sel in send_selectors:
             try:
-                elements = await page.query_selector_all(sel)
-                for btn in elements:
-                    if await btn.is_visible() and not (await btn.is_disabled()):
-                        send_btn = btn
-                        logger.info(f"[{self.display_name}] Found enabled send button via '{sel}'")
-                        break
-                if send_btn:
-                    break
+                btn = await page.query_selector(sel)
+                if btn and await btn.is_visible() and not (await btn.is_disabled()):
+                    await btn.click()
+                    return
             except Exception:
                 continue
 
-        if send_btn:
-            logger.info(f"[{self.display_name}] Clicking send button...")
-            await send_btn.click()
-        else:
-            logger.info(f"[{self.display_name}] No enabled send button found; pressing Enter on input...")
-            await input_el.press("Enter")
+        await input_el.press("Enter")
 
     @abstractmethod
     async def check_auth(self, context: BrowserContext) -> tuple[bool, str]:

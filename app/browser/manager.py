@@ -87,6 +87,24 @@ try {
         });
     }
 } catch (e) {}
+
+// 6. Mask headless user-agent signature
+try {
+    if (navigator.userAgent.includes("Headless")) {
+        const cleanUa = navigator.userAgent.replace(/HeadlessChrome/g, 'Chrome').replace(/Headless/g, '');
+        Object.defineProperty(navigator, 'userAgent', {
+            get: () => cleanUa,
+            configurable: true,
+        });
+    }
+} catch (e) {}
+
+// 7. Emulate screen properties
+try {
+    if (!window.screen || window.screen.colorDepth === 0) {
+        Object.defineProperty(window.screen, 'colorDepth', { get: () => 24, configurable: true });
+    }
+} catch (e) {}
 """
 
 
@@ -188,18 +206,31 @@ class BrowserManager:
                 except Exception as e:
                     logger.warning(f"Could not connect to CDP ({e}); falling back to persistent profile.")
 
-            # Launch persistent context using system Google Chrome
+            # Launch persistent context using system Google Chrome with high-performance flags
             launch_args = [
                 "--disable-blink-features=AutomationControlled",
                 "--no-default-browser-check",
                 "--no-first-run",
                 "--disable-infobars",
-                "--disable-features=IsolateOrigins,site-per-process",
+                "--disable-features=IsolateOrigins,site-per-process,Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider",
                 "--disable-search-engine-choice-screen",
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-renderer-backgrounding",
+                "--disable-ipc-flooding-protection",
+                "--disable-dev-shm-usage",
+                "--disable-breakpad",
+                "--disable-component-update",
+                "--password-store=basic",
                 "--window-size=1280,800",
             ]
             if self.headless:
-                launch_args.append("--headless=new")
+                launch_args.extend([
+                    "--headless=new",
+                    "--disable-gpu",
+                    "--mute-audio",
+                    "--hide-scrollbars",
+                ])
 
             # Try Chrome first, then Edge, then default Chromium
             channels = ["chrome", "msedge", None]
@@ -208,7 +239,7 @@ class BrowserManager:
 
             for ch in channels:
                 try:
-                    logger.info(f"Launching persistent browser context (channel={ch}, dir={self.user_data_dir})...")
+                    logger.info(f"Launching persistent browser context (channel={ch}, dir={self.user_data_dir}, headless={self.headless})...")
                     kwargs: dict[str, Any] = {
                         "user_data_dir": str(self.user_data_dir),
                         "headless": self.headless,
@@ -234,6 +265,41 @@ class BrowserManager:
             except Exception:
                 pass
 
+            # Abort heavy trackers and analytics to dramatically accelerate page loads
+            async def _block_unneeded_resources(route):
+                try:
+                    url = route.request.url.lower()
+                    blocked_patterns = (
+                        "google-analytics.com",
+                        "googletagmanager.com",
+                        "doubleclick.net",
+                        "sentry.io",
+                        "browser.sentry-cdn.com",
+                        "statsig.com",
+                        "amplitude.com",
+                        "segment.io",
+                        "hotjar.com",
+                        "clarity.ms",
+                        "datadoghq.com",
+                        "intercom.io",
+                    )
+                    if any(p in url for p in blocked_patterns):
+                        await route.abort()
+                    elif route.request.resource_type in ("media", "beacon"):
+                        await route.abort()
+                    else:
+                        await route.continue_()
+                except Exception:
+                    try:
+                        await route.continue_()
+                    except Exception:
+                        pass
+
+            try:
+                await context.route("**/*", _block_unneeded_resources)
+            except Exception:
+                pass
+
             self._context = context
 
     async def close(self) -> None:
@@ -251,6 +317,29 @@ class BrowserManager:
                 except Exception:
                     pass
                 self._playwright = None
+
+    async def warmup(self) -> None:
+        """Warm up browser context and pre-load the default provider tab in the background."""
+        await self.initialize()
+        if not self._context:
+            return
+        try:
+            # Pre-warm candidate providers if tabs are blank
+            primary_providers = [
+                self.providers.get("chatgpt"),
+                self.providers.get("claude"),
+                self.providers.get("deepseek"),
+                self.providers.get("gemini"),
+            ]
+            for p in primary_providers:
+                if p:
+                    page = await p._get_page(self._context)
+                    if page.url in ("about:blank", "chrome://newtab/"):
+                        logger.info(f"[Warmup] Pre-navigating tab for '{p.name}' ({p.home_url})...")
+                        await page.goto(p.home_url, wait_until="domcontentloaded", timeout=20000)
+                    break
+        except Exception as e:
+            logger.debug(f"[Warmup] Non-critical background warmup note: {e}")
 
     def get_provider_for_model(self, model_name: str) -> BaseBrowserProvider:
         """Synchronously resolve a model name or alias to a browser provider."""

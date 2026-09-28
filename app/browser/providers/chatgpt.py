@@ -48,7 +48,7 @@ class ChatGPTProvider(BaseBrowserProvider):
             page = await self._get_page(context)
             if "chatgpt.com" not in page.url:
                 await page.goto(self.home_url, wait_until="domcontentloaded", timeout=20000)
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.5)
 
             # Check if login button is displayed
             login_el = await page.query_selector('button[data-testid="login-button"], a[href*="login"]')
@@ -92,7 +92,7 @@ class ChatGPTProvider(BaseBrowserProvider):
                     except Exception:
                         await page.goto("https://chatgpt.com/", wait_until="domcontentloaded", timeout=20000)
 
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(0.15)
 
                 # Dismiss any popups or banners
                 await self.dismiss_banners(page)
@@ -136,7 +136,7 @@ class ChatGPTProvider(BaseBrowserProvider):
                 started_generating = False
 
                 while time.time() - start_time < timeout:
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.06)
 
                     # Look for rate limit warnings
                     error_el = await page.query_selector('.text-token-text-error, div[role="alert"]')

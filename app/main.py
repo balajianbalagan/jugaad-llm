@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
     if settings.browser_enabled:
         async def _warmup():
             try:
-                await browser_manager.initialize()
+                await browser_manager.warmup()
                 logger.info("Browser automation context warmed up and ready.")
             except Exception as e:
                 logger.warning(f"Browser warmup notice (will retry on first request): {e}")
