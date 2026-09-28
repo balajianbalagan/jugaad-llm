@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com"><img src="https://img.shields.io/badge/GitHub%20Pages-Live%20Landing%20Page-00f0ff?style=for-the-badge&logo=github" alt="GitHub Pages"></a>
+  <a href="https://balajianbalagan.github.io/jugaad-llm/"><img src="https://img.shields.io/badge/GitHub%20Pages-Live%20Landing%20Page-00f0ff?style=for-the-badge&logo=github" alt="GitHub Pages"></a>
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/100%25-Free%20Tier-success?style=for-the-badge" alt="Free Tier">
 </p>
@@ -45,7 +45,7 @@ Why pay $20/month per provider or bleed through expensive API credits at 3 AM du
 
 ## 🌐 Live Landing Page & GitHub Pages
 
-The project features a sleek, responsive landing page ready to be hosted on **GitHub Pages**:
+The project features a sleek, responsive landing page hosted live at **[balajianbalagan.github.io/jugaad-llm](https://balajianbalagan.github.io/jugaad-llm/)**:
 
 - 📁 **Source Directory:** [`docs/`](docs/)
 - 📄 **Entry Point:** [`docs/index.html`](docs/index.html)
@@ -73,8 +73,8 @@ The project features a sleek, responsive landing page ready to be hosted on **Gi
 ### 1. Install Dependencies
 
 ```bash
-git clone <repo>
-cd useful-projects
+git clone https://github.com/balajianbalagan/jugaad-llm.git
+cd jugaad-llm
 
 # Install dependencies
 pip install -r requirements.txt

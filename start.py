@@ -241,7 +241,7 @@ def run_interactive_login(user_data_dir: Path, auto_import: bool = False) -> Non
 def print_banner(local_url: str, public_url: str | None = None, master_key: str | None = None, cdp_mode: str | None = None):
     api_key_str = master_key or "sk-hackathon-token"
     print("\n" + "═" * 72)
-    print(" 🧙‍♂️ LLM-JUGAAD: FREE LLM TOKEN GATEWAY IS LIVE!")
+    print(" 🧙‍♂️ JUGAAD-LLM: FREE LLM TOKEN GATEWAY IS LIVE!")
     print("─" * 72)
     print(f" 🏠 Landing Page:             {local_url}/")
     print(f" 🎛️  Dashboard & Test Console: {local_url}/dashboard")
