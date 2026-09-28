@@ -10,7 +10,8 @@
 
 <p align="center">
   <b>✨ Conjure unlimited free LLM tokens from your free web sessions with pure Jugaad ingenuity. ✨</b><br>
-  <i>Drop-in OpenAI- and OpenRouter-compatible API gateway running locally on your laptop.</i>
+  <i>Drop-in OpenAI- and OpenRouter-compatible API gateway running locally on your laptop.</i><br/>
+  <i>Made with 💖 by  <a href="https://balajianbalagan.pages.dev/">Balaji Anbalagan</a></i>
 </p>
 
 <p align="center">
