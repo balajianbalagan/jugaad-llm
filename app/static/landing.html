@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>llm-jugaad 🧙‍♂️ | Free LLM Token Gateway</title>
+  <title>jugaad-llm 🧙‍♂️ | Free LLM Token Gateway</title>
   <meta name="description" content="Conjure unlimited free LLM tokens from your free ChatGPT, Claude, Gemini, DeepSeek, and Grok web sessions into a drop-in OpenAI-compatible API gateway.">
-  <link rel="icon" type="image/jpeg" href="assets/llm-jugaad-badge.jpg">
+  <link rel="icon" type="image/jpeg" href="assets/jugaad-llm-badge.jpg">
   <style>
     :root {
       --bg: #07090e;
@@ -718,7 +718,7 @@
   <header>
     <div class="container nav">
       <a href="#" class="brand-group">
-        <img src="assets/llm-jugaad-badge.jpg" alt="llm-jugaad logo" class="brand-logo-img">
+        <img src="assets/jugaad-llm-badge.jpg" alt="jugaad-llm logo" class="brand-logo-img">
         <div class="brand-title">llm-<span>jugaad</span> 🧙‍♂️</div>
       </a>
       <div class="nav-links">
@@ -749,7 +749,7 @@
           <span class="magic-text">Out of Thin Air.</span>
         </h1>
         <p class="hero-desc">
-          Stop bleeding API credits at 3 AM. <b>llm-jugaad</b> turns your free-tier ChatGPT, Claude, Gemini, DeepSeek, and Grok web browser sessions into a lightning-fast, drop-in OpenAI-compatible API gateway.
+          Stop bleeding API credits at 3 AM. <b>jugaad-llm</b> turns your free-tier ChatGPT, Claude, Gemini, DeepSeek, and Grok web browser sessions into a lightning-fast, drop-in OpenAI-compatible API gateway.
         </p>
         <div class="hero-actions">
           <button onclick="openDashboard()" class="btn-glow">
@@ -783,7 +783,7 @@
       <div class="hero-visual">
         <div class="hero-card">
           <div class="hero-img-wrap">
-            <img src="assets/llm-jugaad-hero.jpg" alt="LLM-Jugaad Magic Man conjuring LLM tokens" class="hero-img">
+            <img src="assets/jugaad-llm-hero.jpg" alt="LLM-Jugaad Magic Man conjuring LLM tokens" class="hero-img">
             <div class="magic-pill pill-top-right">
               ⚡ <span>API PORT: <b>ACTIVE</b></span>
             </div>
@@ -805,7 +805,7 @@
           Hackathons and indie projects shouldn't fail because an OpenAI credit card limit tripped or Anthropic denied your API key. You already have access to world-class models through your web browser.
         </p>
         <p style="color: #fff; font-size: 15px; font-weight: 500;">
-          <b>llm-jugaad</b> connects your native Chrome session, sidesteps Cloudflare bot detection, and gives your code an OpenAI `/v1/chat/completions` endpoint.
+          <b>jugaad-llm</b> connects your native Chrome session, sidesteps Cloudflare bot detection, and gives your code an OpenAI `/v1/chat/completions` endpoint.
         </p>
       </div>
 
@@ -961,7 +961,7 @@
       <div id="chat-stream" class="chat-window">🧙‍♂️ LLM-Jugaad ready. Type a prompt below or click 'Conjure Idea' to watch free tokens stream live...</div>
 
       <div class="input-bar">
-        <input type="text" id="play-input" placeholder="e.g. Pitch a crazy AI hackathon project using llm-jugaad..." value="Pitch a 10x developer tool built with free LLM tokens!">
+        <input type="text" id="play-input" placeholder="e.g. Pitch a crazy AI hackathon project using jugaad-llm..." value="Pitch a 10x developer tool built with free LLM tokens!">
         <button class="btn-conjure" onclick="streamDemo()">
           ✨ Conjure Tokens
         </button>
@@ -979,7 +979,7 @@
       <div class="section-title-wrap">
         <span class="section-badge">Drop-In Compatibility</span>
         <h2 class="section-title">Zero Refactoring Required.</h2>
-        <p class="section-subtitle">llm-jugaad implements the full OpenAI Chat Completions specification with SSE token streaming.</p>
+        <p class="section-subtitle">jugaad-llm implements the full OpenAI Chat Completions specification with SSE token streaming.</p>
       </div>
 
       <div class="tabs-container">
@@ -995,7 +995,7 @@
           <button class="copy-btn" onclick="copyCode('code-py')">Copy</button>
           <pre id="code-py" class="code-box"><code>from openai import OpenAI
 
-# 🧙‍♂️ Point directly to your local or ngrok llm-jugaad gateway
+# 🧙‍♂️ Point directly to your local or ngrok jugaad-llm gateway
 client = OpenAI(
     base_url="http://localhost:4000/v1",  # Or https://your-tunnel.ngrok-free.app/v1
     api_key="sk-hackathon-token"          # Master gateway key from .env
@@ -1020,7 +1020,7 @@ for chunk in response:
           <pre id="code-ts" class="code-box"><code>import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
-// 🧙‍♂️ Drop-in OpenAI provider pointed to llm-jugaad
+// 🧙‍♂️ Drop-in OpenAI provider pointed to jugaad-llm
 const jugaad = createOpenAI({
   baseURL: 'http://localhost:4000/v1',
   apiKey: 'sk-hackathon-token',
@@ -1118,9 +1118,9 @@ for chunk in llm.stream("Give me three bullet points on why jugaad engineering w
   <footer>
     <div class="container footer-content">
       <div class="footer-left">
-        <img src="assets/llm-jugaad-logo.jpg" alt="llm-jugaad mascot">
+        <img src="assets/jugaad-llm-logo.jpg" alt="jugaad-llm mascot">
         <div>
-          <b style="color: #fff; font-size: 15px;">llm-jugaad</b>
+          <b style="color: #fff; font-size: 15px;">jugaad-llm</b>
           <p class="footer-text">Conjuring free LLM tokens with pure engineering ingenuity.</p>
         </div>
       </div>

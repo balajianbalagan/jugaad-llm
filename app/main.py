@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="llm-jugaad",
+    title="jugaad-llm",
     version="0.2.0",
     description="Conjure unlimited free LLM tokens from your free ChatGPT, Claude, Gemini, DeepSeek, and Grok web sessions into a drop-in OpenAI-compatible API gateway.",
     lifespan=lifespan,

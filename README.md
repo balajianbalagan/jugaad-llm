@@ -1,11 +1,11 @@
-# 🧙‍♂️ llm-jugaad: The Free LLM Gateway
+# 🧙‍♂️ jugaad-llm: The Free LLM Gateway
 
 <p align="center">
-  <img src="assets/llm-jugaad-hero.jpg" alt="llm-jugaad magic man conjuring tokens" width="850" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+  <img src="assets/jugaad-llm-hero.jpg" alt="jugaad-llm magic man conjuring tokens" width="850" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
 </p>
 
 <p align="center">
-  <img src="assets/llm-jugaad-badge.jpg" alt="llm-jugaad badge" width="130" style="border-radius: 50%;">
+  <img src="assets/jugaad-llm-badge.jpg" alt="jugaad-llm badge" width="130" style="border-radius: 50%;">
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 
 Why pay $20/month per provider or bleed through expensive API credits at 3 AM during a hackathon? You already have free-tier access to world-class LLMs like **ChatGPT (GPT-4o)**, **Claude (Claude 3.5 Sonnet)**, **Google Gemini**, **DeepSeek (R1/V3)**, and **Grok** through your browser.
 
-**`llm-jugaad`** automates your authenticated browser sessions via Chromium, completely sidesteps Cloudflare bot challenges and Google OAuth restrictions, and exposes a unified, streaming OpenAI-compatible API gateway (`/v1/chat/completions`).
+**`jugaad-llm`** automates your authenticated browser sessions via Chromium, completely sidesteps Cloudflare bot challenges and Google OAuth restrictions, and exposes a unified, streaming OpenAI-compatible API gateway (`/v1/chat/completions`).
 
 **No paid OpenAI/Anthropic API keys or credit cards required.**
 
@@ -99,7 +99,7 @@ If you already use Chrome and have logged-in accounts (like your Google account)
 # 1. List all discovered Chrome profiles with their Google emails
 python start.py --list-profiles
 
-# 2. Import your profile into llm-jugaad
+# 2. Import your profile into jugaad-llm
 python start.py --import-profile
 ```
 
@@ -294,5 +294,5 @@ python -m pytest -p no:cacheprovider
 ---
 
 <p align="center">
-  <b>llm-jugaad</b> — Crafted with 🧡 for hackathon champions and unstoppable builders.
+  <b>jugaad-llm</b> — Crafted with 🧡 for hackathon champions and unstoppable builders.
 </p>

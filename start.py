@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Unified entrypoint for llm-jugaad (Free LLM Token Gateway).
+Unified entrypoint for jugaad-llm (Free LLM Token Gateway).
 
 Usage:
   python start.py                         # Normal run (local http://localhost:4000)
@@ -299,7 +299,7 @@ async def run_validation(user_data_dir: Path, cdp_url: str | None = None) -> Non
 
 def main():
     setup_logging()
-    parser = argparse.ArgumentParser(description="llm-jugaad: Free LLM Token Gateway")
+    parser = argparse.ArgumentParser(description="jugaad-llm: Free LLM Token Gateway")
     parser.add_argument("--validate", action="store_true", help="Validate authentication and chat input readiness across all model providers")
     parser.add_argument("--login", action="store_true", help="Launch native Chrome window to sign into accounts")
     parser.add_argument("--import-profile", nargs="?", const="Default", default=None, help="Import Google account and sessions from a Chrome profile (e.g. Default or Profile 20)")
